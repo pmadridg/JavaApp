@@ -149,81 +149,7 @@ public class Factura {
         
     }
     
-    public void registrarDetalle(String facturaId) throws Exception{
-    
-        Connection cn = null;
-        PreparedStatement pstm = null;
-        ResultSet rs = null;
-       
-        int reg = 0;
-        double cuentaSaldo =0;
-        
-        
-        StringBuilder sqlDetalleInsert = new StringBuilder();
-        sqlDetalleInsert.append("INSERT INTO tb_detalle_factura (fac_id, pro_cod, df_qty ");
-        sqlDetalleInsert.append("VALUES(?,?,?) ");
-       
-        
-        
-        StringBuilder sqlStockUpdate = new StringBuilder();
-        sqlStockUpdate.append("UPDATE tb_producto SET pro_stock = ? ");
-        sqlStockUpdate.append("WHERE pro_cod = ?");
-        
-        String sqlMovimientoSelectNum = "SELECT LAST_INSERT_ID() AS num";
-        try {
-            if (rs.next()){
-                this.producto.setStock(rs.getInt("pro_stock"));
-                //this.cuenta.setCliente(new Cliente(rs.getInt("cli_id"), rs.getString("cli_nom")));
-            }
-            
-            //Validar Saldo disponible 
-            if (this.getCantidad() > this.producto.getStock() ){
-                System.out.println("Movimiento.registrarTransferencia: Saldo insuficiente");    
-                throw new Exception("Saldo insuficiente");                
-            }
-            
-            /************************************************
-             * REGISTRAR LA TRANSACCIÓN RETIRO - DEPOSITO
-             ************************************************/            
-            //Registrar Retiro del Importe en la Cuenta Origen
-            
-            cuentaSaldo = this.getProducto().getStock() - this.cantidad; // Retiro
-            pstm = cn.prepareStatement(sqlDetalleInsert.toString());             
-            pstm.setString(1, facturaId); //Fecha actual
-            pstm.setString(2, this.producto.getCodigo());
-            pstm.setInt(3, this.getCantidad());
-            
-            
-            //Ejecutar la sentencia en la BD
-            reg = pstm.executeUpdate(); //devuelve # reg. afectados
-            
-            System.out.println("Movimiento.registrarTransferencia: Registrar Retiro");
-            
-            //Obtener el num transacción Cuenta Origen
-            pstm = cn.prepareStatement(sqlMovimientoSelectNum);
-            rs = pstm.executeQuery();
-            
-            System.out.println("Movimiento.registrarTransferencia: Consultar Nro Transacción");
-            
-            if(rs.next()){
-                this.numeroFactura = rs.getString("fact_id");
-            }                
-            
-             //Actualizar el Saldo en la Cuenta Origen
-            pstm = cn.prepareStatement(sqlStockUpdate.toString());
-            pstm.setString(1, this.producto.getCodigo());
-            pstm.setInt(2, this.producto.getStock());
-                        
-             //Ejecutar la sentencia en la BD
-            reg = pstm.executeUpdate(); //devuelve # reg. afectados
-            
-            System.out.println("Movimiento.registrarTransferencia: Actualizar Saldo Cuenta Origen");
-            
-             cn.commit();
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(Factura.class.getName()).log(Level.SEVERE, null, ex);
-        }
+   
             
         
         
@@ -383,20 +309,5 @@ public class Factura {
         }
     }
     
-    public void registrarFacturaCompleta() throws Exception {
-    
-     registrarCabecera();
-     String pto= producto.getCodigo();
-     int qty = getCantidad();
-     String fact = getNumeroFactura();
-     for (int row =0; row <nroDetalle; row++)
-     {
-         //numeroFactura = (String)(getTablaDetalle().getValueAt(row,0));
-          pto = (String)(getTablaDetalle().getValueAt(row,1));
-          qty = (int)(getTablaDetalle().getValueAt(row,4));
-          registrarDetalle(fact);
-     }
-        
-    
-    }
+ 
 }
